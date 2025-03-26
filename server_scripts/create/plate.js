@@ -1,4 +1,6 @@
 ServerEvents.recipes(event => {
-    console.log('Removing recipe: create:crafting/iron_sheet');
     event.remove({ id: 'create:iron_sheet' });
+    event.shapeless('create:iron_sheet', [
+        'minecraft:iron_ingot'
+    ])
 })
