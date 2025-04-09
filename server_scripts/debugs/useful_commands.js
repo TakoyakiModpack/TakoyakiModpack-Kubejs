@@ -14,7 +14,7 @@ const commands = {
   gs: (ctx) => gamemode(ctx, "survival"),
   ga: (ctx) => gamemode(ctx, "adventure"),
   gsp: (ctx) => gamemode(ctx, "spectator"),
-  g: {
+  /*g: {
     1: (ctx) => gamemode(ctx, "creative"),
     2: (ctx) => gamemode(ctx, "survival"),
     3: (ctx) => gamemode(ctx, "adventure"),
@@ -77,9 +77,11 @@ function readCommandsSection(literal, sections, registerLitrals, retList) {
         //コマンドの最初か、引数か
         if (!!registerLitrals) {
           //引数
-          newRegistLit.push(head(registerLitrals).then(literal(section)));
+          newRegistLit.push(
+            head(registerLitrals).then(literal(section.toString()))
+          );
         } else {
-          newRegistLit.push(literal(section)); //最初
+          newRegistLit.push(literal(section.toString())); //最初
           console.log(`Registing Command /${section}`);
         }
         readCommandsSection(literal, sections[section], newRegistLit).forEach(
@@ -94,4 +96,26 @@ ServerEvents.commandRegistry((event) => {
   readCommandsSection(event.commands.literal, commands).forEach((literal) => {
     event.register(literal);
   });
+  //HACK:commandsのオブジェクトでは動作しなかったためここに個別で筆記している
+  //[HACK]のコメントは「一時的な回避策や、理想的ではない実装を示す。より良い解決策の検討が必要」ということを意味します
+  const { commands: Commands, arguments: Arguments } = event;
+  event.register(
+    Commands.literal("g") // The name of the command
+      .requires((s) => s.hasPermission(2)) // Check if the player has operator privileges
+      .then(
+        Commands.argument("gamemode", Arguments.INTEGER.create(event)).executes(
+          (c) => {
+            const gnum = Arguments.INTEGER.getResult(c, "gamemode");
+            const ACTIONS = {
+              1: (ctx) => gamemode(ctx, "creative"),
+              2: (ctx) => gamemode(ctx, "survival"),
+              3: (ctx) => gamemode(ctx, "adventure"),
+              4: (ctx) => gamemode(ctx, "spectator"),
+            };
+            ACTIONS[gnum](c);
+            return 1;
+          }
+        )
+      )
+  );
 });
